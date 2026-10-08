@@ -15,6 +15,31 @@ def get_db():
     connection.row_factory = sqlite3.Row
     return connection
 
+def init_db():
+    connection = get_db()
+
+    connection.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    """)
+
+    connection.execute("""
+        CREATE TABLE IF NOT EXISTS scan_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            target TEXT NOT NULL,
+            open_ports TEXT,
+            scan_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    connection.commit()
+    connection.close()
+init_db()
+
 
 @app.route("/")
 def home():
