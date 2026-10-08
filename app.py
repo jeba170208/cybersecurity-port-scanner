@@ -1,0 +1,138 @@
+import os
+from port_scanner import scan_ports
+from flask import Flask, render_template, request, redirect, url_for, session
+import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
+
+app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-only-secret")
+
+DATABASE = "port_scanner.db"
+
+
+def get_db():
+    connection = sqlite3.connect(DATABASE)
+    connection.row_factory = sqlite3.Row
+    return connection
+
+
+@app.route("/")
+def home():
+    if "username" in session:
+        return redirect(url_for("dashboard"))
+
+    return redirect(url_for("login"))
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+
+    if request.method == "POST":
+
+        username = request.form["username"]
+        password = request.form["password"]
+
+        hashed_password = generate_password_hash(password)
+
+        connection = get_db()
+
+        try:
+            connection.execute(
+                "INSERT INTO users (username, password) VALUES (?, ?)",
+                (username, hashed_password)
+            )
+
+            connection.commit()
+            connection.close()
+
+            return redirect(url_for("login"))
+
+        except sqlite3.IntegrityError:
+
+            connection.close()
+
+            return render_template(
+                "register.html",
+                error="Username already exists"
+            )
+
+    return render_template("register.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if request.method == "POST":
+
+        username = request.form["username"]
+        password = request.form["password"]
+
+        connection = get_db()
+
+        user = connection.execute(
+            "SELECT * FROM users WHERE username = ?",
+            (username,)
+        ).fetchone()
+
+        connection.close()
+
+        if user and check_password_hash(user["password"], password):
+
+            session["username"] = username
+
+            return redirect(url_for("dashboard"))
+
+        return render_template(
+            "login.html",
+            error="Invalid username or password"
+        )
+
+    return render_template("login.html")
+
+
+@app.route("/dashboard", methods=["GET", "POST"])
+def dashboard():
+
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    target = None
+    ip = None
+    open_ports = []
+    error = None
+
+    if request.method == "POST":
+
+        target = request.form["target"].strip()
+
+        if not target:
+            error = "Please enter an IP address or website."
+
+        else:
+            ip, open_ports = scan_ports(target)
+
+            if ip is None:
+                error = "Could not resolve the target."
+
+    return render_template(
+        "dashboard.html",
+        username=session["username"],
+        target=target,
+        ip=ip,
+        open_ports=open_ports,
+        error=error
+    )
+
+
+@app.route("/logout")
+def logout():
+
+    session.pop("username", None)
+
+    return redirect(url_for("login"))
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host="0.0.0.0", port=port)
+

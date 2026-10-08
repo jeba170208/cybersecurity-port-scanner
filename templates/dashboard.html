@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Port Scanner - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <h1>🔐 Port Scanner Dashboard</h1>
+
+    <p>Welcome, <strong>{{ username }}</strong>!</p>
+
+    <hr>
+
+    <h2>Scan Target</h2>
+
+    <form method="POST">
+
+        <input
+            type="text"
+            name="target"
+            placeholder="Enter IP address or website"
+            value="{{ target or '' }}"
+            required
+        >
+
+        <button type="submit">Start Scan</button>
+
+    </form>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if ip %}
+
+        <div class="results">
+
+            <h2>Scan Results</h2>
+
+            <p>
+                <strong>Target:</strong> {{ target }}
+            </p>
+
+            <p>
+                <strong>IP Address:</strong> {{ ip }}
+            </p>
+
+            <p>
+                <strong>Open Ports:</strong> {{ open_ports|length }}
+            </p>
+
+            {% if open_ports %}
+
+                <table>
+                    <tr>
+                        <th>Port</th>
+                        <th>Status</th>
+                    </tr>
+
+                    {% for port in open_ports %}
+                    <tr>
+                        <td>{{ port }}</td>
+                        <td>OPEN</td>
+                    </tr>
+                    {% endfor %}
+
+                </table>
+
+            {% else %}
+
+                <p>No open ports found in the scanned range.</p>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+    <br>
+
+    <a href="{{ url_for('logout') }}">Logout</a>
+
+</div>
+
+</body>
+</html>
