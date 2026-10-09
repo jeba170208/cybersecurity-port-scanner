@@ -1,90 +1,130 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Port Scanner - Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CyberScope | Port Scanner</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
+<div class="background-glow glow-one"></div>
+<div class="background-glow glow-two"></div>
 
-<div class="dashboard">
+<header class="navbar">
+    <div class="brand">⌁ CYBERSCOPE <span>PORT INTELLIGENCE</span></div>
+    <div class="nav-user">
+        <span class="online-dot"></span> SCANNER ONLINE
+        <span class="username">{{ username }}</span>
+        <a href="{{ url_for('logout') }}">Logout ↗</a>
+    </div>
+</header>
 
-    <h1>🔐 Port Scanner Dashboard</h1>
+<main class="container">
 
-    <p>Welcome, <strong>{{ username }}</strong>!</p>
-
-    <hr>
-
-    <h2>Scan Target</h2>
-
-    <form method="POST">
-
-        <input
-            type="text"
-            name="target"
-            placeholder="Enter IP address or website"
-            value="{{ target or '' }}"
-            required
-        >
-
-        <button type="submit">Start Scan</button>
-
-    </form>
-
-    {% if error %}
-        <p class="error">{{ error }}</p>
-    {% endif %}
-
-    {% if ip %}
-
-        <div class="results">
-
-            <h2>Scan Results</h2>
-
-            <p>
-                <strong>Target:</strong> {{ target }}
+    <section class="hero">
+        <div>
+            <p class="eyebrow">NETWORK SECURITY TOOLKIT</p>
+            <h1>See your network<br><span>more clearly.</span></h1>
+            <p class="hero-description">
+                Discover open TCP ports and learn their common purposes
+                with clear, practical security explanations.
             </p>
-
-            <p>
-                <strong>IP Address:</strong> {{ ip }}
-            </p>
-
-            <p>
-                <strong>Open Ports:</strong> {{ open_ports|length }}
-            </p>
-
-            {% if open_ports %}
-
-                <table>
-                    <tr>
-                        <th>Port</th>
-                        <th>Status</th>
-                    </tr>
-
-                    {% for port in open_ports %}
-                    <tr>
-                        <td>{{ port }}</td>
-                        <td>OPEN</td>
-                    </tr>
-                    {% endfor %}
-
-                </table>
-
-            {% else %}
-
-                <p>No open ports found in the scanned range.</p>
-
-            {% endif %}
-
         </div>
 
+        <div class="cyber-orb">
+            <div class="orb-center">CS</div>
+            <div class="orb-ring ring-one"></div>
+            <div class="orb-ring ring-two"></div>
+            <span class="orb-node node-one"></span>
+            <span class="orb-node node-two"></span>
+            <span class="orb-node node-three"></span>
+        </div>
+    </section>
+
+    <section class="panel scan-panel">
+        <p class="eyebrow">01 / TARGET</p>
+        <h2>Start a scan</h2>
+
+        <form method="POST" action="{{ url_for('dashboard') }}"
+              class="scan-form">
+            <input
+                type="text"
+                name="target"
+                placeholder="Enter authorized hostname or IP"
+                value="{{ target or '' }}"
+                required
+            >
+            <button type="submit">Start Scan <span>→</span></button>
+        </form>
+
+        <p class="helper">
+            Scan only computers and networks you own or have permission to test.
+        </p>
+
+        {% if error %}
+        <div class="error-message">⚠ {{ error }}</div>
+        {% endif %}
+    </section>
+
+    {% if scanned %}
+    <section class="results-section">
+        <p class="eyebrow">02 / SCAN REPORT</p>
+        <h2>Results <span class="muted">for {{ target }}</span></h2>
+
+        <div class="stats">
+            <div class="panel stat-card">
+                <p>RESOLVED IP</p>
+                <h3 class="ip-value">{{ ip }}</h3>
+            </div>
+            <div class="panel stat-card">
+                <p>OPEN TCP PORTS</p>
+                <h3>{{ open_ports|length }}</h3>
+            </div>
+            <div class="panel stat-card">
+                <p>PORT RANGE</p>
+                <h3>1–1024</h3>
+            </div>
+        </div>
+
+        {% if port_results %}
+        <div class="port-grid">
+            {% for item in port_results %}
+            <article class="panel port-card">
+                <div class="port-heading">
+                    <span class="port-number">{{ item.port }}</span>
+                    <span class="open-badge">● OPEN</span>
+                </div>
+
+                <h3>{{ item.service }}</h3>
+
+                <p class="field-label">COMMON PURPOSE</p>
+                <p class="port-purpose">{{ item.purpose }}</p>
+
+                <div class="security-note">
+                    <p class="field-label">SECURITY NOTE</p>
+                    <p>{{ item.note }}</p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="panel empty-state">
+            <h3>No open ports found in this range</h3>
+            <p>This scan found no successful TCP connections to ports 1–1024.</p>
+        </div>
+        {% endif %}
+
+        <p class="disclaimer">
+            Port numbers suggest common services; they do not prove which
+            software is running or whether a system is vulnerable.
+        </p>
+    </section>
     {% endif %}
 
-    <br>
-
-    <a href="{{ url_for('logout') }}">Logout</a>
-
-</div>
-
+    <footer>CYBERSCOPE • EDUCATIONAL USE • AUTHORIZED TESTING ONLY</footer>
+</main>
 </body>
 </html>
